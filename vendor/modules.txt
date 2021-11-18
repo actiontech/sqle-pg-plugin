@@ -1,15 +1,23 @@
-# github.com/actiontech/sqle v1.2109.1-0.20211104055103-6163b77d6ce7
+# github.com/actiontech/sqle v1.2111.0-pre2.0.20211118103626-0a00b747995e
 ## explicit
 github.com/actiontech/sqle/sqle/driver
 github.com/actiontech/sqle/sqle/driver/proto
-github.com/actiontech/sqle/sqle/errors
 github.com/actiontech/sqle/sqle/log
-github.com/actiontech/sqle/sqle/model
+github.com/actiontech/sqle/sqle/pkg/driver
 github.com/actiontech/sqle/sqle/utils
+# github.com/denisenkom/go-mssqldb v0.9.0
+github.com/denisenkom/go-mssqldb
+github.com/denisenkom/go-mssqldb/internal/cp
+github.com/denisenkom/go-mssqldb/internal/decimal
+github.com/denisenkom/go-mssqldb/internal/querytext
 # github.com/dgrijalva/jwt-go v3.2.0+incompatible
 github.com/dgrijalva/jwt-go
-# github.com/fatih/color v1.7.0
+# github.com/fatih/color v1.9.0
 github.com/fatih/color
+# github.com/golang-sql/civil v0.0.0-20190719163853-cb61b32ac6fe
+github.com/golang-sql/civil
+# github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
+github.com/golang/glog
 # github.com/golang/protobuf v1.5.2
 github.com/golang/protobuf/proto
 github.com/golang/protobuf/protoc-gen-go/descriptor
@@ -19,7 +27,6 @@ github.com/golang/protobuf/ptypes/duration
 github.com/golang/protobuf/ptypes/empty
 github.com/golang/protobuf/ptypes/timestamp
 # github.com/hashicorp/go-hclog v0.14.1
-## explicit
 github.com/hashicorp/go-hclog
 # github.com/hashicorp/go-plugin v1.4.2
 github.com/hashicorp/go-plugin
@@ -43,39 +50,45 @@ github.com/jackc/pgservicefile
 # github.com/jackc/pgtype v1.8.1
 github.com/jackc/pgtype
 # github.com/jackc/pgx/v4 v4.13.0
-## explicit
 github.com/jackc/pgx/v4
 github.com/jackc/pgx/v4/internal/sanitize
 github.com/jackc/pgx/v4/stdlib
-# github.com/jinzhu/gorm v1.9.15
-github.com/jinzhu/gorm
-# github.com/jinzhu/inflection v1.0.0
-github.com/jinzhu/inflection
-# github.com/jmoiron/sqlx v1.3.3
-github.com/jmoiron/sqlx
-github.com/jmoiron/sqlx/reflectx
 # github.com/konsorten/go-windows-terminal-sequences v1.0.3
 github.com/konsorten/go-windows-terminal-sequences
 # github.com/mattn/go-colorable v0.1.6
 github.com/mattn/go-colorable
 # github.com/mattn/go-isatty v0.0.12
 github.com/mattn/go-isatty
-# github.com/mitchellh/go-testing-interface v1.0.0
-## explicit
+# github.com/mitchellh/go-testing-interface v1.14.0
 github.com/mitchellh/go-testing-interface
 # github.com/oklog/run v1.0.0
 github.com/oklog/run
+# github.com/percona/go-mysql v0.0.0-20210427141028-73d29c6da78c
+github.com/percona/go-mysql/query
 # github.com/pganalyze/pg_query_go/v2 v2.1.0
 ## explicit
 github.com/pganalyze/pg_query_go/v2
 github.com/pganalyze/pg_query_go/v2/parser
+# github.com/pingcap/errors v0.11.5-0.20201126102027-b0a155152ca3
+github.com/pingcap/errors
 # github.com/pkg/errors v0.9.1
+## explicit
 github.com/pkg/errors
-# github.com/sirupsen/logrus v1.4.2
+# github.com/sijms/go-ora/v2 v2.2.15
+github.com/sijms/go-ora/v2
+github.com/sijms/go-ora/v2/advanced_nego
+github.com/sijms/go-ora/v2/converters
+github.com/sijms/go-ora/v2/network
+github.com/sijms/go-ora/v2/network/security
+github.com/sijms/go-ora/v2/trace
+# github.com/sirupsen/logrus v1.6.0
 github.com/sirupsen/logrus
-# golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97
+# go.uber.org/atomic v1.7.0
+go.uber.org/atomic
+# golang.org/x/crypto v0.0.0-20210817164053-32db794688a5
+golang.org/x/crypto/md4
 golang.org/x/crypto/pbkdf2
-# golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4
+# golang.org/x/net v0.0.0-20210825183410-e898025ed96a
 golang.org/x/net/context
 golang.org/x/net/http/httpguts
 golang.org/x/net/http2
@@ -83,10 +96,10 @@ golang.org/x/net/http2/hpack
 golang.org/x/net/idna
 golang.org/x/net/internal/timeseries
 golang.org/x/net/trace
-# golang.org/x/sys v0.0.0-20210615035016-665e8c7367d1
+# golang.org/x/sys v0.0.0-20210823070655-63515b42dcdf
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
-# golang.org/x/text v0.3.6
+# golang.org/x/text v0.3.7
 golang.org/x/text/cases
 golang.org/x/text/internal
 golang.org/x/text/internal/language
@@ -100,10 +113,9 @@ golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
 golang.org/x/text/width
-# google.golang.org/genproto v0.0.0-20210602131652-f16073e35f0c
-## explicit
+# google.golang.org/genproto v0.0.0-20210701191553-46259e63a0a9
 google.golang.org/genproto/googleapis/rpc/status
-# google.golang.org/grpc v1.38.0
+# google.golang.org/grpc v1.39.0
 google.golang.org/grpc
 google.golang.org/grpc/attributes
 google.golang.org/grpc/backoff
@@ -186,5 +198,16 @@ google.golang.org/protobuf/types/known/emptypb
 google.golang.org/protobuf/types/known/timestamppb
 # gopkg.in/natefinch/lumberjack.v2 v2.0.0
 gopkg.in/natefinch/lumberjack.v2
-# gopkg.in/yaml.v2 v2.4.0
-## explicit
+# vitess.io/vitess v0.12.0
+vitess.io/vitess/go/bytes2
+vitess.io/vitess/go/hack
+vitess.io/vitess/go/sqltypes
+vitess.io/vitess/go/vt/log
+vitess.io/vitess/go/vt/proto/query
+vitess.io/vitess/go/vt/proto/topodata
+vitess.io/vitess/go/vt/proto/vtrpc
+vitess.io/vitess/go/vt/proto/vttime
+vitess.io/vitess/go/vt/sqlparser
+vitess.io/vitess/go/vt/sysvars
+vitess.io/vitess/go/vt/vterrors
+vitess.io/vitess/go/vt/vtgate/evalengine
