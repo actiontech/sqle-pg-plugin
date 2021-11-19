@@ -3,7 +3,7 @@ package inspector
 import (
 	"reflect"
 
-	"github.com/actiontech/sqle/sqle/model"
+	"github.com/actiontech/sqle/sqle/driver"
 	parser "github.com/pganalyze/pg_query_go/v2"
 )
 
@@ -16,9 +16,9 @@ const (
 )
 
 type RuleHandler struct {
-	Rule                 model.Rule
+	Rule                 driver.Rule
 	Message              string
-	Func                 func(model.Rule, *driverImpl, *parser.RawStmt) error
+	Func                 func(driver.Rule, *driverImpl, *parser.RawStmt) error
 	AllowOffline         bool
 	NotAllowOfflineStmts []interface{}
 }
@@ -47,12 +47,11 @@ func init() {
 
 var RuleHandlers = []RuleHandler{
 	{
-		Rule: model.Rule{
-			Name:      DMLDisableSelectAllColumn,
-			Desc:      "不建议使用select *",
-			Level:     model.RuleLevelNotice,
-			Typ:       RuleTypeDMLConvention,
-			IsDefault: true,
+		Rule: driver.Rule{
+			Name:     DMLDisableSelectAllColumn,
+			Desc:     "不建议使用select *",
+			Level:    driver.RuleLevelError,
+			Category: RuleTypeDMLConvention,
 		},
 		Message:              "不建议使用select *",
 		Func:                 checkSelectAll,
@@ -62,7 +61,7 @@ var RuleHandlers = []RuleHandler{
 	},
 }
 
-func checkSelectAll(rule model.Rule, i *driverImpl, node *parser.RawStmt) error {
+func checkSelectAll(rule driver.Rule, i *driverImpl, node *parser.RawStmt) error {
 	switch stmt := node.GetStmt().GetNode().(type) {
 	case *parser.Node_SelectStmt:
 		// check select all column

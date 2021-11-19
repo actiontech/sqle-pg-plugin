@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"time"
 
+	mdriver "github.com/actiontech/sqle/sqle/driver"
 	"github.com/actiontech/sqle/sqle/errors"
-	"github.com/actiontech/sqle/sqle/model"
 
 	"github.com/hashicorp/go-hclog"
 	_ "github.com/jackc/pgx/v4/stdlib"
@@ -37,7 +37,7 @@ type BaseConn struct {
 	conn *sql.Conn
 }
 
-func newConn(entry hclog.Logger, instance *model.Instance, dbName string) (*BaseConn, error) {
+func newConn(entry hclog.Logger, instance *mdriver.DSN, dbName string) (*BaseConn, error) {
 	if dbName == "" { // todo remove
 		dbName = "postgres"
 	}
@@ -56,13 +56,13 @@ func newConn(entry hclog.Logger, instance *model.Instance, dbName string) (*Base
 	db.SetMaxOpenConns(1)
 	db.SetMaxIdleConns(1)
 
-	entry.Info("connecting to", "dbType", instance.DbType, "host", instance.Host, "port", instance.Port)
+	entry.Info("connecting to", "host", instance.Host, "port", instance.Port)
 	conn, err := db.Conn(context.Background())
 	if err != nil {
 		entry.Error(err.Error())
 		return nil, errors.New(errors.ConnectRemoteDatabaseError, err)
 	}
-	entry.Info("connected to", "dbType", instance.DbType, "host", instance.Host, "port", instance.Port)
+	entry.Info("connected to", "host", instance.Host, "port", instance.Port)
 	return &BaseConn{
 		log:  entry,
 		host: instance.Host,
@@ -201,14 +201,11 @@ func (c *BaseConn) Logger() hclog.Logger {
 }
 
 type Executor struct {
-	dbType string
-	Db     Db
+	Db Db
 }
 
-func NewExecutor(entry hclog.Logger, instance *model.Instance, dbName string) (*Executor, error) {
-	var executor = &Executor{
-		dbType: instance.DbType,
-	}
+func NewExecutor(entry hclog.Logger, instance *mdriver.DSN, dbName string) (*Executor, error) {
+	var executor = &Executor{}
 	var conn Db
 	var err error
 	conn, err = newConn(entry, instance, dbName)
@@ -219,7 +216,7 @@ func NewExecutor(entry hclog.Logger, instance *model.Instance, dbName string) (*
 	return executor, nil
 }
 
-func Ping(entry hclog.Logger, instance *model.Instance) error {
+func Ping(entry hclog.Logger, instance *mdriver.DSN) error {
 	conn, err := NewExecutor(entry, instance, "")
 	if err != nil {
 		return err
