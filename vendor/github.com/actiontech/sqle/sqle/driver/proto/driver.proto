@@ -7,7 +7,7 @@ service Driver {
   rpc Metas(Empty) returns (MetasResponse);
 
   // Init will should be called at first before calling following methods.
-  // It will pass some necessary info to plugin server. In the begginning,
+  // It will pass some necessary info to plugin server. In the beginning,
   // we consider that put this info to the executable binary environment.
   // We put all communication on gRPC for unification in the end.
   rpc Init(InitRequest) returns (Empty);
@@ -27,14 +27,23 @@ message DSN {
   string user = 3;
   string password = 4;
   string database = 5;
+  repeated Param additionalParams = 6;
 }
 
 message Rule {
   string name = 1;
   string desc = 2;
-  string value = 3;
+  string value = 3 [deprecated = true];
   string level = 4;
   string category = 5;
+  repeated Param params = 6;
+}
+
+message Param {
+  string key = 1;
+  string value = 2;
+  string desc = 3;
+  string type = 4;
 }
 
 message InitRequest {
@@ -60,7 +69,7 @@ message TxRequest {
 }
 
 message TxResponse {
-  repeated ExecResponse resluts = 1;
+  repeated ExecResponse results = 1;
 }
 
 message DatabasesResponse {
@@ -106,6 +115,7 @@ message GenRollbackSQLResponse {
 message MetasResponse {
   string name = 1;
   repeated Rule rules = 2;
+  repeated Param additionalParams = 3;
 }
 
 

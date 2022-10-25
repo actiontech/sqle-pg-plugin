@@ -5,10 +5,10 @@ import (
 	"database/sql/driver"
 	"fmt"
 	"regexp"
-	"strconv"
 	"strings"
 	"sync"
 
+	"github.com/actiontech/sqle/sqle/pkg/params"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
@@ -21,6 +21,10 @@ var (
 	// rules store audit rules for each driver.
 	rules   map[string][]*Rule
 	rulesMu sync.RWMutex
+
+	// additionalParams store driver additional params
+	additionalParams   map[string]params.Params
+	additionalParamsMu sync.RWMutex
 )
 
 const (
@@ -35,10 +39,11 @@ const (
 
 // DSN provide necessary information to connect to database.
 type DSN struct {
-	Host     string
-	Port     string
-	User     string
-	Password string
+	Host             string
+	Port             string
+	User             string
+	Password         string
+	AdditionalParams params.Params
 
 	// DatabaseName is the default database to connect.
 	DatabaseName string
@@ -60,6 +65,14 @@ var ruleLevelMap = map[RuleLevel]int{
 	RuleLevelError:  3,
 }
 
+func (r RuleLevel) LessOrEqual(l RuleLevel) bool {
+	return ruleLevelMap[r] <= ruleLevelMap[l]
+}
+
+func (r RuleLevel) More(l RuleLevel) bool {
+	return ruleLevelMap[r] > ruleLevelMap[l]
+}
+
 type Rule struct {
 	Name string
 	Desc string
@@ -67,32 +80,44 @@ type Rule struct {
 	// Category is the category of the rule. Such as "Naming Conventions"...
 	// Rules will be displayed on the SQLE rule list page by category.
 	Category string
-
-	Level RuleLevel
-	Value string
+	Level    RuleLevel
+	Params   params.Params
 }
 
-func (r *Rule) GetValueInt(defaultRule *Rule) int64 {
-	value := r.GetValue()
-	i, err := strconv.ParseInt(value, 10, 64)
-	if err == nil {
-		return i
-	}
-	i, err = strconv.ParseInt(defaultRule.GetValue(), 10, 64)
-	if err == nil {
-		return i
-	}
-	return 0
-}
+//func (r *Rule) GetValueInt(defaultRule *Rule) int64 {
+//	value := r.getValue(DefaultSingleParamKeyName, defaultRule)
+//	i, err := strconv.ParseInt(value, 10, 64)
+//	if err != nil {
+//		return 0
+//	}
+//	return i
+//}
+//
+//func (r *Rule) GetSingleValue() string {
+//	value, _ := r.Params.GetParamValue(DefaultSingleParamKeyName)
+//	return value
+//}
+//
+//func (r *Rule) GetSingleValueInt() int {
+//	value := r.GetSingleValue()
+//	i, err := strconv.Atoi(value)
+//	if err != nil {
+//		return 0
+//	}
+//	return i
+//}
 
-func (r *Rule) GetValue() string {
-	if r == nil {
-		return ""
-	}
-	return r.Value
-}
+//func (r *Rule) getValue(key string, defaultRule *Rule) string {
+//	var value string
+//	var exist bool
+//	value, exist = r.Params.GetParamValue(key)
+//	if !exist {
+//		value, _ = defaultRule.Params.GetParamValue(key)
+//	}
+//	return value
+//}
 
-// Config difine the configuration for driver.
+// Config define the configuration for driver.
 type Config struct {
 	DSN   *DSN
 	Rules []*Rule
@@ -101,7 +126,7 @@ type Config struct {
 // NewConfig return a config for driver.
 //
 // 1. dsn is nil, rules is not nil. Use drive to do Offline Audit.
-// 2. dsn is not nil, rule is nil. Use drive to communicate with databse only.
+// 2. dsn is not nil, rule is nil. Use drive to communicate with database only.
 // 3. dsn is not nil, rule is not nil. Most common usecase.
 func NewConfig(dsn *DSN, rules []*Rule) (*Config, error) {
 	if dsn == nil && rules == nil {
@@ -121,7 +146,7 @@ type handler func(log *logrus.Entry, c *Config) (Driver, error)
 //
 // Register makes a database driver available by the provided driver name.
 // Driver's initialize handler and audit rules register by Register.
-func Register(name string, h handler, rs []*Rule) {
+func Register(name string, h handler, rs []*Rule, ap params.Params) {
 	_, exist := drivers[name]
 	if exist {
 		panic("duplicated driver name")
@@ -137,13 +162,20 @@ func Register(name string, h handler, rs []*Rule) {
 	}
 	rules[name] = rs
 	rulesMu.Unlock()
+
+	additionalParamsMu.Lock()
+	if additionalParams == nil {
+		additionalParams = make(map[string]params.Params)
+	}
+	additionalParams[name] = ap
+	additionalParamsMu.Unlock()
 }
 
-type ErrDriverNotSupported struct {
+type DriverNotSupportedError struct {
 	DriverTyp string
 }
 
-func (e *ErrDriverNotSupported) Error() string {
+func (e *DriverNotSupportedError) Error() string {
 	return fmt.Sprintf("driver type %v is not supported", e.DriverTyp)
 }
 
@@ -177,6 +209,17 @@ func AllDrivers() []string {
 	return driverNames
 }
 
+func AllAdditionalParams() map[string] /*driver name*/ params.Params {
+	additionalParamsMu.RLock()
+	defer additionalParamsMu.RUnlock()
+
+	newParams := map[string]params.Params{}
+	for k, v := range additionalParams {
+		newParams[k] = v.Copy()
+	}
+	return newParams
+}
+
 var ErrNodesCountExceedOne = errors.New("after parse, nodes count exceed one")
 
 // Driver is a interface that must be implemented by a database.
@@ -184,7 +227,7 @@ var ErrNodesCountExceedOne = errors.New("after parse, nodes count exceed one")
 // It's implementation maybe on the same process or over gRPC(by go-plugin).
 //
 // Driver is responsible for two primary things:
-// 1. privode handle to communicate with database
+// 1. provides handle to communicate with database
 // 2. audit SQL with rules
 type Driver interface {
 	Close(ctx context.Context)
@@ -224,6 +267,9 @@ type Registerer interface {
 
 	// Rules returns all rules that plugin supported.
 	Rules() []*Rule
+
+	// AdditionalParams returns all additional params that plugin supported.
+	AdditionalParams() params.Params
 }
 
 // Node is a interface which unify SQL ast tree. It produce by Driver.Parse.
@@ -301,4 +347,8 @@ func (rs *AuditResult) Add(level RuleLevel, message string, args ...interface{})
 		level:   level,
 		message: fmt.Sprintf(message, args...),
 	})
+}
+
+func (rs *AuditResult) HasResult() bool {
+	return len(rs.results) != 0
 }
