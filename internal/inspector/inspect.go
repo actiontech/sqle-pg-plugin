@@ -6,6 +6,8 @@ import (
 	_driver "database/sql/driver"
 	"os"
 
+	"github.com/actiontech/sqle/sqle/pkg/params"
+
 	"github.com/actiontech/sqle-pg-plugin/internal/executor"
 	pkgParser "github.com/actiontech/sqle-pg-plugin/pkg/parser"
 	"github.com/actiontech/sqle/sqle/driver"
@@ -31,6 +33,10 @@ func (s *registererImpl) Rules() []*driver.Rule {
 		allRules = append(allRules, &RuleHandlers[i].Rule)
 	}
 	return allRules
+}
+
+func (s *registererImpl) AdditionalParams() params.Params {
+	return nil
 }
 
 type driverImpl struct {
