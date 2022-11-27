@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	_driver "database/sql/driver"
+	"fmt"
 	"os"
 
 	"github.com/actiontech/sqle/sqle/pkg/params"
@@ -242,4 +243,82 @@ func sqlType(typ interface{}) string {
 		return driver.SQLTypeDML
 	}
 	return ""
+}
+
+/*将抽象语法树还原为sql*/
+func Deparse(node *parser.RawStmt) (out string, err error) {
+	stmts := make([]*parser.RawStmt, 1)
+	stmts[0] = node
+	result := &parser.ParseResult{
+		Version: 130003,
+		Stmts:   stmts,
+	}
+	output, err := parser.Deparse(result)
+	if err != nil {
+
+		return "", err
+	}
+	return output, nil
+
+}
+
+/*检查函数是否有函数调用*/
+func CheckJoinFunc(expr *parser.JoinExpr) bool {
+	if expr.GetQuals() != nil {
+		if expr.GetQuals().GetAExpr() != nil {
+			aexper := expr.GetQuals().GetAExpr()
+			if aexper.GetLexpr() != nil {
+				if aexper.GetLexpr().GetFuncCall() != nil {
+					return true
+				}
+			}
+			if aexper.GetRexpr() != nil {
+				if aexper.GetRexpr().GetFuncCall() != nil {
+					return true
+				}
+			}
+		} else if expr.GetQuals().GetBoolExpr() != nil {
+			for _, args := range expr.GetQuals().GetBoolExpr().GetArgs() {
+				aexper := args.GetAExpr()
+				if aexper.GetLexpr() != nil {
+					if aexper.GetLexpr().GetFuncCall() != nil {
+						return true
+					}
+				}
+				if aexper.GetRexpr() != nil {
+					if aexper.GetRexpr().GetFuncCall() != nil {
+						return true
+					}
+				}
+			}
+		}
+
+	}
+
+	res := false
+	if expr.GetLarg() != nil && expr.GetLarg().GetJoinExpr() != nil {
+		res = res || CheckJoinFunc(expr.GetLarg().GetJoinExpr())
+	}
+	if expr.GetRarg() != nil && expr.GetRarg().GetJoinExpr() != nil {
+		res = res || CheckJoinFunc(expr.GetRarg().GetJoinExpr())
+	}
+	return res
+}
+
+/*获取表的字段和字段对应的值*/
+func (i *driverImpl) GetDescTable(tablename string) (map[string]string, []string) {
+	query := i.getQuery(tablename)
+	fileds := make([]string, len(query))
+	resMap := make(map[string]string, len(query))
+	for _, m := range query {
+		resMap[m["field"].String] = m["type"].String
+		fileds = append(fileds, m["field"].String)
+
+	}
+
+	return resMap, fileds
+}
+func (i *driverImpl) getQuery(tablename string) []map[string]sql.NullString {
+	query, _ := i.Query(context.Background(), fmt.Sprintf("SELECT a.attnum, a.attname AS field, t.typname AS type, a.attlen AS length, a.atttypmod AS lengthvar , a.attnotnull AS notnull, b.description AS comment FROM pg_class c, pg_attribute a LEFT JOIN pg_description b ON a.attrelid = b.objoid AND a.attnum = b.objsubid, pg_type t WHERE c.relname = '%s' AND a.attnum > 0 AND a.attrelid = c.oid AND a.atttypid = t.oid ORDER BY a.attnum;", tablename))
+	return query
 }
