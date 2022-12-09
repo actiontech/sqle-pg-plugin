@@ -219,6 +219,7 @@ func (i *driverImpl) SetConfig(cfg *driver.Config) {
 func sqlType(typ interface{}) string {
 	switch typ.(type) {
 	case *parser.Node_CreateStmt,
+		*parser.Node_CreateTableAsStmt,
 		*parser.Node_CreatedbStmt,
 		*parser.Node_CreateRoleStmt,
 		*parser.Node_CreateAmStmt,
@@ -227,6 +228,8 @@ func sqlType(typ interface{}) string {
 		*parser.Node_DropRoleStmt,
 		*parser.Node_DropTableSpaceStmt,
 		*parser.Node_AlterDatabaseStmt,
+		*parser.Node_AlterTableStmt,
+		*parser.Node_IndexStmt,
 		*parser.Node_TruncateStmt,
 		*parser.Node_CommentStmt,
 		*parser.Node_RenameStmt:
